@@ -24,29 +24,54 @@ def main():
     if args.mode == 'sft':
         payload = {
             'tts_text': args.tts_text,
-            'spk_id': args.spk_id
+            'spk_id': args.spk_id,
+            'speed': args.speed,
+            'stream': args.stream,
+            'text_frontend': args.text_frontend
         }
         response = requests.request("GET", url, data=payload, stream=True)
     elif args.mode == 'zero_shot':
         payload = {
             'tts_text': args.tts_text,
-            'prompt_text': args.prompt_text
+            'prompt_text': args.prompt_text,
+            'zero_shot_spk_id': args.zero_shot_spk_id,
+            'speed': args.speed,
+            'stream': args.stream,
+            'text_frontend': args.text_frontend
         }
         files = [('prompt_wav', ('prompt_wav', open(args.prompt_wav, 'rb'), 'application/octet-stream'))]
         response = requests.request("GET", url, data=payload, files=files, stream=True)
     elif args.mode == 'cross_lingual':
         payload = {
             'tts_text': args.tts_text,
+            'zero_shot_spk_id': args.zero_shot_spk_id,
+            'speed': args.speed,
+            'stream': args.stream,
+            'text_frontend': args.text_frontend
         }
         files = [('prompt_wav', ('prompt_wav', open(args.prompt_wav, 'rb'), 'application/octet-stream'))]
         response = requests.request("GET", url, data=payload, files=files, stream=True)
-    else:
+    elif args.mode == 'instruct':
         payload = {
             'tts_text': args.tts_text,
             'spk_id': args.spk_id,
-            'instruct_text': args.instruct_text
+            'instruct_text': args.instruct_text,
+            'speed': args.speed,
+            'stream': args.stream,
+            'text_frontend': args.text_frontend
         }
         response = requests.request("GET", url, data=payload, stream=True)
+    else:  # instruct2
+        payload = {
+            'tts_text': args.tts_text,
+            'instruct_text': args.instruct_text,
+            'zero_shot_spk_id': args.zero_shot_spk_id,
+            'speed': args.speed,
+            'stream': args.stream,
+            'text_frontend': args.text_frontend
+        }
+        files = [('prompt_wav', ('prompt_wav', open(args.prompt_wav, 'rb'), 'application/octet-stream'))]
+        response = requests.request("GET", url, data=payload, files=files, stream=True)
     tts_audio = b''
     for r in response.iter_content(chunk_size=16000):
         tts_audio += r
@@ -66,7 +91,7 @@ if __name__ == "__main__":
                         default='50000')
     parser.add_argument('--mode',
                         default='sft',
-                        choices=['sft', 'zero_shot', 'cross_lingual', 'instruct'],
+                        choices=['sft', 'zero_shot', 'cross_lingual', 'instruct', 'instruct2'],
                         help='request mode')
     parser.add_argument('--tts_text',
                         type=str,
@@ -87,6 +112,22 @@ if __name__ == "__main__":
     parser.add_argument('--tts_wav',
                         type=str,
                         default='demo.wav')
+    parser.add_argument('--speed',
+                        type=float,
+                        default=1.0,
+                        help='speech speed')
+    parser.add_argument('--stream',
+                        type=bool,
+                        default=False,
+                        help='enable streaming')
+    parser.add_argument('--text_frontend',
+                        type=bool,
+                        default=True,
+                        help='enable text frontend')
+    parser.add_argument('--zero_shot_spk_id',
+                        type=str,
+                        default='',
+                        help='zero shot speaker id')
     args = parser.parse_args()
     prompt_sr, target_sr = 16000, 22050
     main()
